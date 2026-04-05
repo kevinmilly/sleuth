@@ -61,7 +61,7 @@ export async function runAudit(config, options) {
     for (const step of journey.steps) {
       if (stopped) break;
 
-      process.stdout.write(chalk.dim(`  [${step.index + 1}/${journey.steps.length}] ${step.label}... `));
+      process.stdout.write(chalk.dim(`  [${step.index + 1}/${journey.steps.length}] ${stepDescription(step)}... `));
 
       try {
         const result = await executeStep(page, step, context, config, guided, watch);
@@ -113,7 +113,10 @@ export async function runAudit(config, options) {
           chalk.dim(` axe:${axeViolations} keyboard/layout:${auditIssues} console:${consoleErrors} net-fail:${networkFails}`)
         );
       } catch (err) {
-        console.log(chalk.red('✗ ' + err.message));
+        const hint = step.type === 'navigate'
+          ? chalk.dim(` (skipping — could not load ${step.url})`)
+          : '';
+        console.log(chalk.red('✗') + ' ' + err.message.split('\n')[0] + hint);
         evidenceSteps.push({ step: step.index, error: err.message });
         completedSteps++;
       }
@@ -150,6 +153,15 @@ export async function runAudit(config, options) {
   console.log(`  Next     → ${chalk.cyan('sleuth report')} to analyze findings`);
 
   return auditResults;
+}
+
+function stepDescription(step) {
+  switch (step.type) {
+    case 'navigate':    return `Navigating to ${step.url}`;
+    case 'audit_form':  return `Auditing form fields in ${step.component}`;
+    case 'locate_risk': return `Looking for "${step.label}" (${step.risk_type})`;
+    default:            return step.label;
+  }
 }
 
 function makeLogger() {

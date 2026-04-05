@@ -38,6 +38,8 @@ export async function scanReactProject(rootDir) {
       let match;
       while ((match = pattern.exec(content)) !== null) {
         const routePath = match[1];
+        // Must look like a URL path — starts with / and has no spaces
+        if (!routePath.startsWith('/') || /\s/.test(routePath)) continue;
         if (!seenRoutes.has(routePath)) {
           seenRoutes.add(routePath);
           routes.push({ path: routePath, component: rel, dynamic: routePath.includes(':') });
@@ -151,7 +153,13 @@ function extractButtonLabels(content) {
 function extractRiskLabel(content, keyword) {
   const pattern = new RegExp(`["']([^"']{0,30}${keyword}[^"']{0,30})["']`, 'i');
   const m = content.match(pattern);
-  return m ? m[1].trim() : null;
+  if (!m) return null;
+  const label = m[1].trim();
+  // Filter out labels that look like error messages, variable names, or non-UI strings
+  if (label.includes('$')) return null;
+  if (/\b(was|were|has|have|been|could not|cannot|failed)\b/i.test(label)) return null;
+  if (label.includes('(') && label.includes(')')) return null; // function call strings
+  return label;
 }
 
 function mapRiskType(keyword) {
