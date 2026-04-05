@@ -37,19 +37,26 @@ export async function cmdDoctor() {
     console.log(chalk.green('✓') + ' Model: ' + chalk.cyan(`${config.model.provider} / ${config.model.model_id}`));
   }
 
-  // API key check
-  const envKey = {
-    claude: 'ANTHROPIC_API_KEY',
-    openai: 'OPENAI_API_KEY',
-    gemini: 'GEMINI_API_KEY'
-  }[config.model?.provider];
-
-  if (envKey) {
-    if (!process.env[envKey]) {
-      console.log(chalk.red('✗') + ` ${envKey} not set in environment`);
+  // API key / CLI check
+  const provider = config.model?.provider;
+  if (provider === 'claude-code') {
+    try {
+      const { execSync } = await import('child_process');
+      execSync('claude --version', { stdio: 'ignore' });
+      console.log(chalk.green('✓') + ' Claude Code CLI found — no API key needed');
+    } catch {
+      console.log(chalk.red('✗') + ' Claude Code CLI not found. Install from https://claude.ai/code');
       pass = false;
-    } else {
-      console.log(chalk.green('✓') + ` ${envKey} found`);
+    }
+  } else {
+    const envKey = { claude: 'ANTHROPIC_API_KEY', openai: 'OPENAI_API_KEY', gemini: 'GEMINI_API_KEY' }[provider];
+    if (envKey) {
+      if (!process.env[envKey]) {
+        console.log(chalk.red('✗') + ` ${envKey} not set in environment`);
+        pass = false;
+      } else {
+        console.log(chalk.green('✓') + ` ${envKey} found`);
+      }
     }
   }
 

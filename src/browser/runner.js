@@ -8,9 +8,9 @@ import { buildJourneys, loadAppMap, saveJourneys } from './journeys.js';
 import { promptManualLogin, promptLowConfidence, promptChoice } from './guided.js';
 import { restoreSession, saveSession } from './session.js';
 import { runDeterministicAudits, flattenAuditFindings } from '../audits/index.js';
+import { executeStep } from './steps.js';
 
 const EVIDENCE_DIR = '.sleuth/evidence';
-const AUTH_INDICATORS = ['login', 'signin', 'sign-in', 'auth', 'password', 'unauthorized', '401'];
 
 export async function runAudit(config, options) {
   const { watch = false, guided = false } = options;
@@ -147,51 +147,6 @@ export async function runAudit(config, options) {
   console.log(`  Next     → ${chalk.cyan('sleuth report')} to analyze findings`);
 
   return auditResults;
-}
-
-async function executeStep(page, step, context, config, guided, watch) {
-  if (step.type === 'navigate') {
-    await page.goto(step.url, { waitUntil: 'networkidle', timeout: 15000 });
-
-    // Detect auth wall
-    const url = page.url();
-    const title = (await page.title()).toLowerCase();
-    const isAuthWall = AUTH_INDICATORS.some(s => url.includes(s) || title.includes(s));
-    if (isAuthWall) return { status: 'auth_wall' };
-
-    return { status: 'ok' };
-  }
-
-  if (step.type === 'audit_form') {
-    // Locate and interact with the form — fill required fields with placeholder values
-    const form = page.locator('form').first();
-    const exists = await form.count() > 0;
-    if (!exists) return { status: 'ok', note: 'no form found on page' };
-
-    // Tab through all inputs to trigger focus/blur validation
-    const inputs = await page.locator('form input:not([type=hidden])').all();
-    for (const input of inputs) {
-      await input.focus();
-      await page.keyboard.press('Tab');
-    }
-    return { status: 'ok' };
-  }
-
-  if (step.type === 'locate_risk') {
-    // Find elements matching risk keywords and hover to surface any tooltips
-    const selector = `button, [role=button], a`;
-    const elements = await page.locator(selector).all();
-    for (const el of elements) {
-      const text = (await el.textContent() || '').toLowerCase();
-      if (text.includes(step.risk_type) || text.includes(step.label?.toLowerCase())) {
-        await el.hover();
-        break;
-      }
-    }
-    return { status: 'ok' };
-  }
-
-  return { status: 'ok' };
 }
 
 function makeLogger() {

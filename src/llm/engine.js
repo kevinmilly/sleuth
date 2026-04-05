@@ -1,12 +1,20 @@
+import { execSync } from 'child_process';
+import { writeFileSync, unlinkSync } from 'fs';
+import { tmpdir } from 'os';
+import { join } from 'path';
+
 /**
  * Provider-agnostic LLM client.
- * Supports claude, openai, gemini via fetch (no SDK dependencies).
+ * Supports claude-code (uses your Claude Code subscription — no API key needed),
+ * claude (Anthropic API key), openai, and gemini.
  */
 
 export async function callLLM(config, systemPrompt, userMessage) {
   const { provider, model_id } = config.model;
 
   switch (provider) {
+    case 'claude-code':
+      return callClaudeCode(model_id, systemPrompt, userMessage);
     case 'claude':
       return callClaude(model_id, systemPrompt, userMessage);
     case 'openai':
@@ -14,7 +22,45 @@ export async function callLLM(config, systemPrompt, userMessage) {
     case 'gemini':
       return callGemini(model_id, systemPrompt, userMessage);
     default:
-      throw new Error(`Unknown provider: ${provider}. Supported: claude, openai, gemini`);
+      throw new Error(`Unknown provider: ${provider}. Supported: claude-code, claude, openai, gemini`);
+  }
+}
+
+/**
+ * Use the Claude Code CLI (claude -p) — reuses your existing Claude Code subscription.
+ * No API key required. Requires Claude Code to be installed and authenticated.
+ */
+async function callClaudeCode(modelId, systemPrompt, userMessage) {
+  // Verify claude CLI is available
+  try {
+    execSync('claude --version', { stdio: 'ignore' });
+  } catch {
+    throw new Error(
+      'Claude Code CLI not found. Install it from https://claude.ai/code\n' +
+      'Or switch to provider "claude" and set ANTHROPIC_API_KEY.'
+    );
+  }
+
+  const fullPrompt = `${systemPrompt}\n\n---\n\n${userMessage}`;
+
+  // Write prompt to a temp file to avoid shell escaping issues with long prompts
+  const tmpFile = join(tmpdir(), `sleuth-prompt-${Date.now()}.txt`);
+
+  try {
+    writeFileSync(tmpFile, fullPrompt, 'utf8');
+    const modelFlag = modelId ? `--model ${modelId}` : '';
+    // Pass prompt via stdin to avoid any shell escaping issues with large prompts
+    const result = execSync(
+      `claude -p --output-format text ${modelFlag}`,
+      {
+        input: fullPrompt,
+        maxBuffer: 10 * 1024 * 1024,
+        encoding: 'utf8',
+      }
+    );
+    return result.trim();
+  } finally {
+    try { unlinkSync(tmpFile); } catch {}
   }
 }
 

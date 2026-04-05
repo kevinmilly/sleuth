@@ -8,7 +8,7 @@ const DEFAULTS = {
   framework: 'react',
   pause_threshold: 0.65,
   model: {
-    provider: 'claude',
+    provider: 'claude-code',
     model_id: 'claude-sonnet-4-6'
   }
 };
