@@ -6,6 +6,7 @@ import { cmdScan } from './cli/scan.js';
 import { cmdRun } from './cli/run.js';
 import { cmdReplay } from './cli/replay.js';
 import { cmdReport } from './cli/report.js';
+import { cmdConfig } from './cli/config.js';
 
 program
   .name('sleuth')
@@ -44,5 +45,10 @@ program
   .command('report')
   .description('Generate report from last audit')
   .action(cmdReport);
+
+program
+  .command('config')
+  .description('Interactively update sleuth.config.json')
+  .action(cmdConfig);
 
 program.parse();
