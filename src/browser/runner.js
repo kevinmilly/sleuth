@@ -1,4 +1,6 @@
-import { chromium } from 'playwright';
+import { chromium, firefox, webkit } from 'playwright';
+
+const BROWSERS = { chromium, firefox, webkit };
 import fs from 'fs';
 import path from 'path';
 import chalk from 'chalk';
@@ -34,7 +36,8 @@ export async function runAudit(config, options) {
   console.log('');
 
   // Launch browser
-  const browser = await chromium.launch({ headless: !watch });
+  const browserType = BROWSERS[config.browser] ?? chromium;
+  const browser = await browserType.launch({ headless: !watch });
   const context = await browser.newContext();
 
   // Restore session if available

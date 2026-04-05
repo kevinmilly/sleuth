@@ -1,4 +1,6 @@
-import { chromium } from 'playwright';
+import { chromium, firefox, webkit } from 'playwright';
+
+const BROWSERS = { chromium, firefox, webkit };
 import fs from 'fs';
 import chalk from 'chalk';
 import { ensureAppReady } from './startup.js';
@@ -30,7 +32,8 @@ export async function replayJourney(journeyId, config) {
   const baseUrl = await ensureAppReady(config, logger);
   console.log(chalk.green('✓') + ` App ready at ${baseUrl}`);
 
-  const browser = await chromium.launch({ headless: false }); // always visible for replay
+  const browserType = BROWSERS[config.browser] ?? chromium;
+  const browser = await browserType.launch({ headless: false }); // always visible for replay
   const context = await browser.newContext();
   await restoreSession(context);
 

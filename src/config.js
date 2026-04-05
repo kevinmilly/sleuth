@@ -7,6 +7,7 @@ const DEFAULTS = {
   startup_timeout_ms: 15000,
   framework: 'react',
   pause_threshold: 0.65,
+  browser: 'chromium',
   model: {
     provider: 'claude-code',
     model_id: 'claude-sonnet-4-6'

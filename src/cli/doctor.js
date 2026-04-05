@@ -69,8 +69,29 @@ export async function cmdDoctor() {
 
   // Playwright
   try {
-    await import('playwright');
+    const pw = await import('playwright');
     console.log(chalk.green('✓') + ' playwright installed');
+
+    // Check the configured browser executable exists
+    const browserName = config.browser ?? 'chromium';
+    const validBrowsers = ['chromium', 'firefox', 'webkit'];
+    if (!validBrowsers.includes(browserName)) {
+      console.log(chalk.red('✗') + ` Unknown browser "${browserName}" in config — must be chromium, firefox, or webkit`);
+      pass = false;
+    } else {
+      try {
+        const browserType = pw[browserName];
+        const execPath = browserType.executablePath();
+        if (!fs.existsSync(execPath)) {
+          console.log(chalk.red('✗') + ` ${browserName} not downloaded — run: ${chalk.cyan(`npx playwright install ${browserName}`)}`);
+          pass = false;
+        } else {
+          console.log(chalk.green('✓') + ` ${browserName} executable found`);
+        }
+      } catch {
+        console.log(chalk.yellow('⚠') + ` Could not verify ${browserName} executable`);
+      }
+    }
   } catch {
     console.log(chalk.red('✗') + ' playwright not found — run npm install playwright');
     pass = false;

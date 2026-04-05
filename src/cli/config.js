@@ -37,13 +37,6 @@ export async function cmdConfig() {
     },
     {
       type: 'list',
-      name: 'framework',
-      message: 'Framework:',
-      choices: ['react', 'vue', 'svelte', 'angular', 'other'],
-      default: current.framework || 'react',
-    },
-    {
-      type: 'list',
       name: 'provider',
       message: 'LLM provider:',
       choices: ['claude-code', 'claude', 'openai', 'gemini'],
@@ -62,7 +55,6 @@ export async function cmdConfig() {
     url: answers.url,
     dev_server_command: answers.dev_server_command,
     startup_timeout_ms: answers.startup_timeout_ms,
-    framework: answers.framework,
     model: {
       provider: answers.provider,
       model_id: answers.model_id,
