@@ -72,24 +72,21 @@ export async function cmdDoctor() {
     const pw = await import('playwright');
     console.log(chalk.green('✓') + ' playwright installed');
 
-    // Check the configured browser executable exists
+    // Check the configured browser can actually launch
     const browserName = config.browser ?? 'chromium';
     const validBrowsers = ['chromium', 'firefox', 'webkit'];
     if (!validBrowsers.includes(browserName)) {
       console.log(chalk.red('✗') + ` Unknown browser "${browserName}" in config — must be chromium, firefox, or webkit`);
       pass = false;
     } else {
+      let testBrowser;
       try {
-        const browserType = pw[browserName];
-        const execPath = browserType.executablePath();
-        if (!fs.existsSync(execPath)) {
-          console.log(chalk.red('✗') + ` ${browserName} not downloaded — run: ${chalk.cyan(`npx playwright install ${browserName}`)}`);
-          pass = false;
-        } else {
-          console.log(chalk.green('✓') + ` ${browserName} executable found`);
-        }
+        testBrowser = await pw[browserName].launch({ headless: true });
+        await testBrowser.close();
+        console.log(chalk.green('✓') + ` ${browserName} ready`);
       } catch {
-        console.log(chalk.yellow('⚠') + ` Could not verify ${browserName} executable`);
+        console.log(chalk.red('✗') + ` ${browserName} not installed — run: ${chalk.cyan(`npx playwright install ${browserName}`)}`);
+        pass = false;
       }
     }
   } catch {
