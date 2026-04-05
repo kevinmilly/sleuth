@@ -1,0 +1,26 @@
+{
+  "name": "sleuth",
+  "version": "0.1.0",
+  "description": "Autonomous UX auditor — deterministic evidence, LLM interpretation.",
+  "main": "src/index.js",
+  "bin": {
+    "sleuth": "./src/index.js"
+  },
+  "scripts": {
+    "start": "node src/index.js",
+    "dev": "node --watch src/index.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "module",
+  "dependencies": {
+    "@axe-core/playwright": "^4.11.1",
+    "ajv": "^8.18.0",
+    "chalk": "^5.6.2",
+    "commander": "^14.0.3",
+    "inquirer": "^13.3.2",
+    "ora": "^9.3.0",
+    "playwright": "^1.59.1"
+  }
+}

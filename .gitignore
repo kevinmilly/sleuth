@@ -1,0 +1,4 @@
+node_modules/
+sleuth-session.json
+.sleuth/evidence/
+.sleuth/app-map.json
