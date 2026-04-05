@@ -13,11 +13,10 @@ It never reports an issue it can't prove.
 ## Install
 
 ```bash
-# In the Sleuth project directory
-npm install
+# Install globally from the local repo
+npm install -g /path/to/sleuth
 
-# Link the CLI globally (optional)
-npm link
+# To update after pulling changes, run the same command again
 ```
 
 ---
@@ -84,10 +83,10 @@ sleuth report
   "url": "http://localhost:3000",
   "dev_server_command": "",
   "startup_timeout_ms": 15000,
-  "framework": "react",
+  "browser": "chromium",
   "pause_threshold": 0.65,
   "model": {
-    "provider": "claude",
+    "provider": "claude-code",
     "model_id": "claude-sonnet-4-6"
   }
 }
@@ -98,9 +97,9 @@ sleuth report
 | `url` | URL of the running app | `""` |
 | `dev_server_command` | Command to start dev server (e.g. `npm run dev`) | `""` |
 | `startup_timeout_ms` | How long to wait for the app to be ready | `15000` |
-| `framework` | Frontend framework (v1: `react` only) | `"react"` |
+| `browser` | Playwright browser to use: `chromium`, `firefox`, or `webkit` | `"chromium"` |
 | `pause_threshold` | Confidence threshold below which Sleuth pauses for guidance | `0.65` |
-| `model.provider` | LLM provider: `claude`, `openai`, `gemini` | `"claude"` |
+| `model.provider` | LLM provider: `claude-code`, `claude`, `openai`, `gemini` | `"claude-code"` |
 | `model.model_id` | Model to use for analysis | `"claude-sonnet-4-6"` |
 
 Set `pause_threshold` lower (e.g. `0.4`) when auditing apps with restricted access or many auth walls. Set it higher (e.g. `0.8`) for fully open apps where you want minimal interruptions.
