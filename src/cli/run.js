@@ -1,9 +1,24 @@
 import chalk from 'chalk';
+import { loadConfig } from '../config.js';
+import { runAudit } from '../browser/runner.js';
 
 export async function cmdRun(options) {
-  if (!options.watch && !options.guided) {
-    console.log(chalk.yellow('Tip: use --watch to see the browser, or --guided to assist at ambiguous steps.'));
+  let config;
+  try {
+    config = loadConfig();
+  } catch (err) {
+    console.log(chalk.red('✗ ' + err.message));
+    process.exit(1);
   }
-  console.log(chalk.dim('sleuth run — coming in Phase 4 (browser runner).'));
-  console.log(chalk.dim('For now, run: sleuth scan then check .sleuth/app-map.json'));
+
+  try {
+    await runAudit(config, {
+      watch: !!options.watch,
+      guided: !!options.guided,
+    });
+  } catch (err) {
+    console.log(chalk.red('\n✗ Audit failed: ' + err.message));
+    if (process.env.DEBUG) console.error(err);
+    process.exit(1);
+  }
 }
