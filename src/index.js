@@ -27,6 +27,7 @@ program
   .command('scan')
   .description('Scan codebase and build app-map.json')
   .option('--dry-run', 'Show what was detected without launching a browser')
+  .option('--no-llm', 'Skip LLM journey generation; journeys will be built deterministically at run time')
   .action(cmdScan);
 
 program

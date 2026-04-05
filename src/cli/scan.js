@@ -4,9 +4,11 @@ import chalk from 'chalk';
 import ora from 'ora';
 import { loadConfig } from '../config.js';
 import { scanReactProject } from '../scanner/react.js';
+import { generateJourneys } from '../llm/journeys.js';
+import { saveJourneys } from '../browser/journeys.js';
 
 export async function cmdScan(options) {
-  loadConfig(); // validates config exists
+  const config = loadConfig();
 
   const spinner = ora('Scanning codebase...').start();
 
@@ -47,5 +49,24 @@ export async function cmdScan(options) {
   fs.writeFileSync('.sleuth/app-map.json', JSON.stringify(appMap, null, 2));
   console.log('');
   console.log(chalk.green('✓') + ' Wrote .sleuth/app-map.json');
+
+  // Generate journeys — LLM-driven unless --no-llm is passed
+  if (!options.noLlm) {
+    const journeySpinner = ora('Generating journeys with LLM...').start();
+    try {
+      const baseUrl = config.url || '';
+      const journeys = await generateJourneys(appMap, config, baseUrl, process.cwd());
+      saveJourneys(journeys);
+      journeySpinner.succeed(`Generated ${journeys.length} journey(s)`);
+      journeys.forEach(j => console.log(`  ${chalk.cyan(j.id)}  ${chalk.dim(j.label)}`));
+    } catch (err) {
+      journeySpinner.warn('Journey generation failed: ' + err.message);
+      console.log(chalk.dim('  Journeys will be built deterministically at run time.'));
+    }
+  } else {
+    console.log(chalk.dim('  Skipped LLM journey generation (--no-llm). Journeys will be built at run time.'));
+  }
+
+  console.log('');
   console.log('  Run ' + chalk.cyan('sleuth run --guided') + ' to start the audit.');
 }

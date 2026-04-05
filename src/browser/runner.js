@@ -29,10 +29,23 @@ export async function runAudit(config, options) {
   }
   const appMap = loadAppMap();
 
-  // Build journeys
-  const journeys = buildJourneys(appMap, baseUrl);
-  saveJourneys(journeys);
-  console.log(chalk.green(`✓`) + ` Built ${journeys.length} journey(s)`);
+  // Load pre-generated journeys from scan, or fall back to deterministic build
+  let journeys;
+  const journeyDir = '.sleuth/journeys';
+  const existingJourneyFiles = fs.existsSync(journeyDir)
+    ? fs.readdirSync(journeyDir).filter(f => f.endsWith('.json'))
+    : [];
+
+  if (existingJourneyFiles.length > 0) {
+    journeys = existingJourneyFiles.map(f =>
+      JSON.parse(fs.readFileSync(path.join(journeyDir, f), 'utf8'))
+    );
+    console.log(chalk.green(`✓`) + ` Loaded ${journeys.length} pre-generated journey(s)`);
+  } else {
+    journeys = buildJourneys(appMap, baseUrl);
+    saveJourneys(journeys);
+    console.log(chalk.green(`✓`) + ` Built ${journeys.length} journey(s) (deterministic)`);
+  }
   journeys.forEach(j => console.log(`  ${chalk.dim('·')} ${j.label}`));
   console.log('');
 
