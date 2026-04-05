@@ -50,6 +50,9 @@ export async function runAudit(config, options) {
 
   for (const journey of journeys) {
     console.log(chalk.bold(`\nJourney: ${journey.label}`));
+    if (journey.description) {
+      console.log(chalk.dim(`  Goal: ${journey.description}`));
+    }
     const page = await context.newPage();
     attachListeners(page);
 

@@ -22,6 +22,7 @@ export function buildJourneys(appMap, baseUrl) {
     journeys.push({
       id: 'journey-route-scan',
       label: 'Route scan — visit all static routes',
+      description: `Load every static route and collect baseline evidence: screenshots, accessibility violations, console errors, and network failures. Establishes whether each page renders correctly and flags any immediate issues.`,
       steps: routeSteps,
     });
   }
@@ -35,6 +36,7 @@ export function buildJourneys(appMap, baseUrl) {
     journeys.push({
       id: `journey-form-${fi}-${slugify(form.name)}`,
       label: `Form interaction — ${form.name}`,
+      description: `Navigate to the page containing "${form.name}" and audit its form fields for accessibility, labelling, keyboard operability, and error handling. Fields detected: ${form.fields?.length ? form.fields.join(', ') : 'none'}.`,
       steps: [
         {
           index: 0,
@@ -62,6 +64,7 @@ export function buildJourneys(appMap, baseUrl) {
       journeys.push({
         id: 'journey-risk-actions',
         label: 'Risk actions — identify destructive or payment flows',
+        description: `Locate UI elements associated with irreversible or high-stakes actions (${risks.map(r => r.label).join(', ')}). Checks whether these actions have confirmation steps, clear labelling, and are accessible.`,
         steps: [
           {
             index: 0,
