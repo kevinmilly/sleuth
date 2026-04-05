@@ -7,6 +7,7 @@ import { collectEvidence, attachListeners, writeEvidenceIndex } from './evidence
 import { buildJourneys, loadAppMap, saveJourneys } from './journeys.js';
 import { promptManualLogin, promptLowConfidence, promptChoice } from './guided.js';
 import { restoreSession, saveSession } from './session.js';
+import { runDeterministicAudits, flattenAuditFindings } from '../audits/index.js';
 
 const EVIDENCE_DIR = '.sleuth/evidence';
 const AUTH_INDICATORS = ['login', 'signin', 'sign-in', 'auth', 'password', 'unauthorized', '401'];
@@ -88,18 +89,25 @@ export async function runAudit(config, options) {
           }
         }
 
-        // Collect evidence
-        const evidence = await collectEvidence(page, journey.id, step.index, EVIDENCE_DIR);
+        // Collect evidence + run deterministic audits in parallel
+        const [evidence, auditResult] = await Promise.all([
+          collectEvidence(page, journey.id, step.index, EVIDENCE_DIR),
+          runDeterministicAudits(page, journey.id, step.index, EVIDENCE_DIR),
+        ]);
+
+        evidence.audit_findings = flattenAuditFindings(auditResult);
+        evidence.audit_file = auditResult._file;
         evidenceSteps.push(evidence);
         completedSteps++;
 
         const axeViolations = evidence.axe?.violations ?? 0;
-        const consoleErrors = (evidence.console_logs?.count ?? 0);
-        const networkFails = (evidence.network_failures?.count ?? 0);
+        const consoleErrors = evidence.console_logs?.count ?? 0;
+        const networkFails = evidence.network_failures?.count ?? 0;
+        const auditIssues = evidence.audit_findings?.length ?? 0;
 
         console.log(
           chalk.green('✓') +
-          chalk.dim(` axe:${axeViolations} console:${consoleErrors} net-fail:${networkFails}`)
+          chalk.dim(` axe:${axeViolations} keyboard/layout:${auditIssues} console:${consoleErrors} net-fail:${networkFails}`)
         );
       } catch (err) {
         console.log(chalk.red('✗ ' + err.message));
