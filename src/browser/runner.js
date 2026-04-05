@@ -15,7 +15,8 @@ import { executeStep } from './steps.js';
 const EVIDENCE_DIR = '.sleuth/evidence';
 
 export async function runAudit(config, options) {
-  const { watch = false, guided = false } = options;
+  const { guided = false } = options;
+  const watch = options.watch || guided; // guided always needs a visible browser
 
   // Phase 2: Ensure app is ready
   const logger = makeLogger();
@@ -76,7 +77,7 @@ export async function runAudit(config, options) {
             // retry step after login
             await executeStep(page, step, context, config, guided, watch);
           } else {
-            console.log(chalk.yellow('auth wall — stopping journey'));
+            console.log(chalk.yellow('⏸  auth wall detected — re-run with') + ' ' + chalk.cyan('sleuth run --guided') + chalk.yellow(' to log in manually'));
             stopped = true;
             stoppedReason = 'auth_wall';
             break;

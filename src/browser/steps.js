@@ -1,4 +1,16 @@
-const AUTH_INDICATORS = ['login', 'signin', 'sign-in', 'auth', 'password', 'unauthorized', '401'];
+const AUTH_URL_INDICATORS = ['login', 'signin', 'sign-in', 'auth', 'unauthorized', '401'];
+const AUTH_TITLE_INDICATORS = ['log in', 'sign in', 'login', 'signin', 'unauthorized'];
+
+async function detectAuthWall(page) {
+  const url = page.url().toLowerCase();
+  const title = (await page.title()).toLowerCase();
+  if (AUTH_URL_INDICATORS.some(s => url.includes(s))) return true;
+  if (AUTH_TITLE_INDICATORS.some(s => title.includes(s))) return true;
+  // Check for a password input as a reliable signal
+  const hasPasswordField = await page.locator('input[type="password"]').count() > 0;
+  if (hasPasswordField) return true;
+  return false;
+}
 
 /**
  * Execute a single journey step against a Playwright page.
@@ -8,10 +20,7 @@ export async function executeStep(page, step, context, config, guided, watch) {
   if (step.type === 'navigate') {
     await page.goto(step.url, { waitUntil: 'networkidle', timeout: 15000 });
 
-    const url = page.url();
-    const title = (await page.title()).toLowerCase();
-    const isAuthWall = AUTH_INDICATORS.some(s => url.includes(s) || title.includes(s));
-    if (isAuthWall) return { status: 'auth_wall' };
+    if (await detectAuthWall(page)) return { status: 'auth_wall' };
 
     return { status: 'ok' };
   }
