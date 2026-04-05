@@ -85,7 +85,12 @@ export async function cmdDoctor() {
         await testBrowser.close();
         console.log(chalk.green('✓') + ` ${browserName} ready`);
       } catch {
-        console.log(chalk.red('✗') + ` ${browserName} not installed — run: ${chalk.cyan(`npx playwright install ${browserName}`)}`);
+        // Resolve the sleuth package root so we point at its own playwright install
+        const { createRequire } = await import('module');
+        const req = createRequire(import.meta.url);
+        const sleuthRoot = path.resolve(req.resolve('playwright'), '../../..');
+        console.log(chalk.red('✗') + ` ${browserName} not installed — run:`);
+        console.log(chalk.cyan(`  npx --prefix "${sleuthRoot}" playwright install ${browserName}`));
         pass = false;
       }
     }

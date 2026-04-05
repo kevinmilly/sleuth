@@ -7,7 +7,7 @@ import chalk from 'chalk';
 import { ensureAppReady } from './startup.js';
 import { collectEvidence, attachListeners, writeEvidenceIndex } from './evidence.js';
 import { buildJourneys, loadAppMap, saveJourneys } from './journeys.js';
-import { promptManualLogin, promptLowConfidence, promptChoice } from './guided.js';
+import { promptManualLogin, promptLoginOpportunity, promptLowConfidence, promptChoice } from './guided.js';
 import { restoreSession, saveSession } from './session.js';
 import { runDeterministicAudits, flattenAuditFindings } from '../audits/index.js';
 import { executeStep } from './steps.js';
@@ -45,6 +45,15 @@ export async function runAudit(config, options) {
   const sessionRestored = await restoreSession(context);
   if (sessionRestored) {
     console.log(chalk.green('✓') + ' Restored saved session');
+  }
+
+  // In guided mode, open the app and give the user a chance to log in before auditing
+  if (guided) {
+    const loginPage = await context.newPage();
+    await loginPage.goto(baseUrl, { waitUntil: 'networkidle', timeout: 15000 }).catch(() => {});
+    await promptLoginOpportunity(loginPage.url());
+    await saveSession(context);
+    await loginPage.close();
   }
 
   const auditResults = [];

@@ -15,6 +15,17 @@ export async function promptChoice(question, choices) {
 }
 
 /**
+ * Always offered at the start of a guided run — log in if needed, or skip.
+ */
+export async function promptLoginOpportunity(url) {
+  console.log('');
+  console.log(chalk.cyan('⏸  Login opportunity'));
+  console.log(chalk.dim(`The browser is open at: ${url}`));
+  console.log(chalk.dim('If the app requires login, do it now in the browser window.'));
+  await confirm({ message: 'Press Enter when ready to start the audit (or just continue if no login needed)' });
+}
+
+/**
  * Ask the user to log in manually, then confirm when done.
  */
 export async function promptManualLogin(url) {
